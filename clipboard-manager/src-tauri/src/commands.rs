@@ -102,9 +102,10 @@ pub fn get_db_path() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn select_db_path(app: tauri::AppHandle) -> Result<String, String> {
-    use tauri::api::dialog::blocking::FileDialogBuilder;
+    use tauri_plugin_dialog::DialogExt;
+    use tauri_plugin_dialog::FileDialogBuilder;
 
-    let result = FileDialogBuilder::new()
+    let result = app.dialog().file()
         .set_title("选择数据库保存位置")
         .set_file_name("clipboard.db")
         .add_filter("SQLite Database", &["db"])
