@@ -103,13 +103,18 @@ pub fn get_db_path() -> Result<String, String> {
 #[tauri::command]
 pub async fn select_db_path(app: tauri::AppHandle) -> Result<String, String> {
     use tauri_plugin_dialog::DialogExt;
-    use tauri_plugin_dialog::FileDialogBuilder;
 
-    let result = app.dialog().file()
+    let (tx, rx) = tokio::sync::oneshot::channel();
+
+    app.dialog().file()
         .set_title("选择数据库保存位置")
         .set_file_name("clipboard.db")
         .add_filter("SQLite Database", &["db"])
-        .save_file();
+        .save_file(move |path| {
+            let _ = tx.send(path);
+        });
+
+    let result = rx.await.map_err(|_| "对话框被取消".to_string())?;
 
     match result {
         Some(path) => {
