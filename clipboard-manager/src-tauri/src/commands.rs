@@ -88,7 +88,7 @@ pub fn clear_history(db: State<'_, Database>) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn copy_to_clipboard(content: String) -> Result<(), String> {
+pub async fn copy_to_clipboard(_content: String) -> Result<(), String> {
     // 使用 tauri-plugin-clipboard-manager
     // 这里简化处理，实际应该调用插件
     Ok(())
@@ -118,7 +118,10 @@ pub async fn select_db_path(app: tauri::AppHandle) -> Result<String, String> {
 
     match result {
         Some(path) => {
-            let path_str = path.to_string_lossy().to_string();
+            let path_str = match path {
+                tauri_plugin_dialog::FilePath::Path(p) => p.to_string_lossy().to_string(),
+                tauri_plugin_dialog::FilePath::Url(u) => u.to_string(),
+            };
             let mut config = load_config();
             config.db_path = path_str.clone();
             save_config(&config)?;
