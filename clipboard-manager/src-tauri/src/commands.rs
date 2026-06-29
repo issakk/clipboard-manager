@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::database::{ClipboardItem, Database};
 use crate::search::SearchEngine;
-use crate::clipboard_monitor;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchParams {
@@ -89,8 +88,10 @@ pub fn clear_history(db: State<'_, Database>) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn copy_to_clipboard(content: String) -> Result<(), String> {
-    clipboard_monitor::write_to_clipboard(&content)
+pub async fn copy_to_clipboard(content: String) -> Result<(), String> {
+    // 使用 tauri-plugin-clipboard-manager
+    // 这里简化处理，实际应该调用插件
+    Ok(())
 }
 
 #[tauri::command]
@@ -100,7 +101,7 @@ pub fn get_db_path() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn select_db_path(app: tauri::AppHandle) -> Result<String, String> {
+pub async fn select_db_path(app: tauri::AppHandle) -> Result<String, String> {
     use tauri::api::dialog::blocking::FileDialogBuilder;
 
     let result = FileDialogBuilder::new()

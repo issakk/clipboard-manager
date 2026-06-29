@@ -4,14 +4,14 @@
 mod clipboard_monitor;
 mod database;
 mod search;
-mod tray;
-mod hotkey;
 mod commands;
 
 use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
             // 获取数据库路径
             let db_path = commands::get_db_path().unwrap_or_else(|_| {
@@ -27,7 +27,7 @@ fn main() {
             app.manage(db);
 
             // 启动剪切板监控
-            let handle = app.handle();
+            let handle = app.handle().clone();
             std::thread::spawn(move || {
                 clipboard_monitor::start_monitoring(handle);
             });

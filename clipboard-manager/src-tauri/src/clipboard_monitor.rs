@@ -1,6 +1,6 @@
 use std::thread;
 use std::time::Duration;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use uuid::Uuid;
 use chrono::Utc;
 
@@ -47,7 +47,7 @@ pub fn start_monitoring(app: AppHandle) {
         }
 
         // 通知前端
-        let _ = app.emit_all("clipboard-changed", &item);
+        let _ = app.emit("clipboard-changed", &item);
     }
 }
 
@@ -59,8 +59,7 @@ fn read_clipboard_content() -> String {
 
     #[cfg(not(target_os = "windows"))]
     {
-        // Linux/macOS 使用 arboard crate
-        read_cross_platform_clipboard()
+        String::new()
     }
 }
 
@@ -70,8 +69,7 @@ fn read_windows_clipboard() -> String {
 
     unsafe {
         use winapi::um::winuser::{OpenClipboard, GetClipboardData, CloseClipboard, CF_UNICODETEXT};
-        use winapi::um::winbase::GlobalLock;
-        use winapi::um::winbase::GlobalUnlock;
+        use winapi::um::winbase::{GlobalLock, GlobalUnlock};
 
         if OpenClipboard(null_mut()) == 0 {
             return String::new();
@@ -104,13 +102,6 @@ fn read_windows_clipboard() -> String {
     }
 }
 
-#[cfg(not(target_os = "windows"))]
-fn read_cross_platform_clipboard() -> String {
-    // 在 Linux 上使用 arboard 或 xclip
-    // 这里返回空字符串作为占位
-    String::new()
-}
-
 fn truncate_text(text: &str, max_len: usize) -> String {
     if text.len() <= max_len {
         text.to_string()
@@ -120,7 +111,6 @@ fn truncate_text(text: &str, max_len: usize) -> String {
 }
 
 fn get_device_id() -> String {
-    // 生成或读取设备唯一标识
     use std::fs;
     use std::path::Path;
 
